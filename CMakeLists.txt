@@ -45,11 +45,16 @@ target_link_directories(${CMAKE_PROJECT_NAME} PRIVATE
 # Add sources to executable
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     # Add user sources here
+
+    Drivers/STM32_OPAL_Driver/Src/stm32_opal_frame.c
+    Drivers/STM32_OPAL_Driver/Src/stm32_opal_utils.c
 )
 
 # Add include paths
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
     # Add user defined include paths
+
+    Drivers/STM32_OPAL_Driver/Inc
 )
 
 # Add project symbols (macros)
