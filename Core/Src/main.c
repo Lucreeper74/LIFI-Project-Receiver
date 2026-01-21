@@ -125,11 +125,11 @@ int main(void)
         switch (decoding_status) {
           case OPAL_SUCCESS:
             HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
-            printf("Frame Reception Status: SUCCESS\r\n");
+            printf("Reception Status: SUCCESS\r\n");
             break;
             
           case OPAL_ERROR_CRC_MISMATCH:
-            printf("Frame Reception Status: CRC_MISMATCH\r\n");
+            printf("Reception Status: CRC_MISMATCH\r\n");
             break;
 
           default:
