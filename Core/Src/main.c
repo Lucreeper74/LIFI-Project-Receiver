@@ -116,19 +116,23 @@ int main(void)
 
     // OPAL Receiver Processing
     OPAL_Receiver_Process(&hrx);
-
+ 
     // If a frame is ready to be decoded, decode it!
     if (hrx.Status == OPAL_RECEIVER_WAITING_DECODE) {
-        OPAL_Frame frame;
-        OPAL_Status decoding_status = OPAL_Receiver_Decode(&hrx, &frame);
-        if (decoding_status == OPAL_SUCCESS)
-          HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
-          //printf("FRAME DECODED ! \r\n");
-        else
-          //HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
-          printf("FRAME ERROR! \r\n");
+        OPAL_Frame receivedFrame;
+        OPAL_Status decoding_status = OPAL_Receiver_Decode(&hrx, &receivedFrame);
 
-        OPAL_Receiver_Start_Sniffing(&hrx); // Return to sniffing mode
+        switch (decoding_status) {
+          case OPAL_SUCCESS:
+            HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
+            printf("Frame Reception Status: SUCCESS\r\n");
+          case OPAL_ERROR_CRC_MISMATCH:
+            printf("Frame Reception Status: CRC_MISMATCH\r\n");
+
+          default:
+            break;
+        }
+        OPAL_Receiver_Start_Sniffing(&hrx);
     }
 
     /* USER CODE END WHILE */
