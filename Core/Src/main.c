@@ -112,7 +112,7 @@ int main(void)
     if (huart_rx.cmd_ready) {
         UART_Command cmd = UART_RX_ParseCmd(&huart_rx);
         printf(cmd.has_param ? "Received Command: %s, with param: %s\r\n" : "Received Command: %s\r\n", cmd.command, cmd.param);
-        OPAL_RX_UART_processCommand(&cmd, &htx);
+        OPAL_RX_UART_processCommand(&cmd, &hrx);
     }
 
     // OPAL Receiver Processing
