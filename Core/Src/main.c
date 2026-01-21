@@ -196,6 +196,10 @@ void HAL_ADC_ConvHalfCpltCallback(ADC_HandleTypeDef *hadc) {
   }
 }
 
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef* huart) {
+    UART_RX_Callback(huart);
+}
+
 PUTCHAR_PROTOTYPE
 {
   // Used for Printf
