@@ -20,7 +20,6 @@
 #include "main.h"
 #include "adc.h"
 #include "dma.h"
-#include "stm32_opal_receiver.h"
 #include "stm32f3xx_hal_gpio.h"
 #include "tim.h"
 #include "usart.h"
@@ -28,7 +27,8 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "stm32_opal_receiver.h"
+#include "stm32_opal_uart_rx_cmd.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -97,7 +97,9 @@ int main(void)
   MX_ADC1_Init();
   MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
+
   OPAL_Receiver_Init(&hadc1, &htim2);
+  UART_RX_Init(&huart2);
 
   OPAL_Receiver_Start_Sniffing(&hrx);
   /* USER CODE END 2 */
@@ -106,14 +108,17 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    /* USER CODE END WHILE */
+    // Listen UART Commands and process them
+    if (huart_rx.cmd_ready) {
+        UART_Command cmd = UART_RX_ParseCmd(&huart_rx);
+        printf(cmd.has_param ? "Received Command: %s, with param: %s\r\n" : "Received Command: %s\r\n", cmd.command, cmd.param);
+        OPAL_RX_UART_processCommand(&cmd, &htx);
+    }
 
-    /* USER CODE BEGIN 3 */
-    bool bp_state = !HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13);
-    //HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, bp_state ? GPIO_PIN_SET : GPIO_PIN_RESET);
-
+    // OPAL Receiver Processing
     OPAL_Receiver_Process(&hrx);
 
+    // If a frame is ready to be decoded, decode it!
     if (hrx.Status == OPAL_RECEIVER_WAITING_DECODE) {
         OPAL_Frame frame;
         OPAL_Status decoding_status = OPAL_Receiver_Decode(&hrx, &frame);
@@ -126,6 +131,10 @@ int main(void)
 
         OPAL_Receiver_Start_Sniffing(&hrx); // Return to sniffing mode
     }
+
+    /* USER CODE END WHILE */
+
+    /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
 }
