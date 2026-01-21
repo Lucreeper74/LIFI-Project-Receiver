@@ -20,7 +20,6 @@
 #include "main.h"
 #include "adc.h"
 #include "dma.h"
-#include "stm32f3xx_hal_gpio.h"
 #include "tim.h"
 #include "usart.h"
 #include "gpio.h"
