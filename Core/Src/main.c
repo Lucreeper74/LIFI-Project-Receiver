@@ -20,6 +20,7 @@
 #include "main.h"
 #include "adc.h"
 #include "dma.h"
+#include "stm32_opal_frame.h"
 #include "tim.h"
 #include "usart.h"
 #include "gpio.h"
@@ -101,6 +102,15 @@ int main(void)
   UART_RX_Init(&huart2);
 
   OPAL_Receiver_Start_Sniffing(&hrx);
+
+  char* RX_data_str_fields[] = {
+      "STATUS=",
+      "BIN_ERRORS=",
+      "BIN_VALID=",
+  };
+
+  char* RX_str_prefix = "RX_DATA: ";
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -122,20 +132,35 @@ int main(void)
         OPAL_Frame receivedFrame;
         OPAL_Status decoding_status = OPAL_Receiver_Decode(&hrx, &receivedFrame);
 
+        int bit_errors_count = 0;
+        char* status_str = "UNSPECIFIED";
+
         switch (decoding_status) {
           case OPAL_SUCCESS:
             HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
-            printf("Reception Status: SUCCESS\r\n");
+            status_str = "SUCCESS";
+            bit_errors_count = 0;
             break;
             
           case OPAL_ERROR_CRC_MISMATCH:
-            printf("Reception Status: CRC_MISMATCH\r\n");
+            status_str = "CRC_MISMATCH";
+            bit_errors_count = OPAL_Frame_getHammingDistance(&receivedFrame, &OPAL_TestFrame);
             break;
 
           default:
             break;
         }
-        OPAL_Receiver_Start_Sniffing(&hrx);
+
+        int bit_valid_count = (OPAL_FRAME_SIZE * 8) - bit_errors_count;
+
+        // Print received data summary
+        printf("Data received! %s %s%s, %s%i, %s%i\r\n", 
+          RX_str_prefix, 
+          RX_data_str_fields[0], status_str, 
+          RX_data_str_fields[1], bit_errors_count,
+          RX_data_str_fields[2], bit_valid_count);
+
+        OPAL_Receiver_Start_Sniffing(&hrx); // Return to sniffing mode
     }
 
     /* USER CODE END WHILE */
@@ -198,7 +223,13 @@ void SystemClock_Config(void)
 
 void HAL_ADC_ConvHalfCpltCallback(ADC_HandleTypeDef *hadc) {
   if (hadc->Instance == ADC1) {
-    OPAL_Receiver_Buffer_Callback(&hrx);
+    OPAL_Receiver_Buffer_Callback(&hrx, true);
+  }
+}
+
+void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc) {
+  if (hadc->Instance == ADC1) {
+    OPAL_Receiver_Buffer_Callback(&hrx, false);
   }
 }
 
