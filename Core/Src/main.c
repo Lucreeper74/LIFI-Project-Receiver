@@ -20,7 +20,8 @@
 #include "main.h"
 #include "adc.h"
 #include "dma.h"
-#include "stm32_opal_frame.h"
+#include "i2c.h"
+#include "ssd1306_oled.h"
 #include "tim.h"
 #include "usart.h"
 #include "gpio.h"
@@ -49,7 +50,7 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-
+const char* display_TAG = "OPAL RX Unit";
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -60,7 +61,26 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+void display_summary(char* status_str, int bit_errors_count, int bit_valid_count) {
+  char status_dis_str[20];
+  sprintf(status_dis_str, "Status = %s", status_str);
 
+  char ber_str[20];
+  sprintf(ber_str, "Bit Error = %d", bit_errors_count);
+
+  char bit_valid_str[24];
+  sprintf(bit_valid_str, "Bit Valid = %d", bit_valid_count);
+
+  ssd1306_clear_screen();
+
+  ssd1306_draw_string(display_TAG, (TPosition){20, 0});
+  ssd1306_draw_string("Received Data Summary:", (TPosition){0, 8});
+  ssd1306_draw_string(status_dis_str, (TPosition){0, 16});
+  ssd1306_draw_string(ber_str, (TPosition){0, 2});
+  ssd1306_draw_string(bit_valid_str, (TPosition){0, 24});
+
+  ssd1306_update();
+}
 /* USER CODE END 0 */
 
 /**
@@ -96,10 +116,17 @@ int main(void)
   MX_USART2_UART_Init();
   MX_ADC1_Init();
   MX_TIM2_Init();
+  MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
 
   OPAL_Receiver_Init(&hadc1, &htim2);
   UART_RX_Init(&huart2);
+
+  ssd1306_init();
+  ssd1306_clear_screen();
+  ssd1306_draw_string("RX OPAL RECEIVER", (TPosition) {20, 0});
+  ssd1306_draw_string("Hello World!!", (TPosition) {32, 32});
+  ssd1306_update();
 
   OPAL_Receiver_Start_Sniffing(&hrx);
 
@@ -160,6 +187,10 @@ int main(void)
           RX_data_str_fields[1], bit_errors_count,
           RX_data_str_fields[2], bit_valid_count);
 
+        
+        // Display received data summary
+        display_summary(status_str, bit_errors_count, bit_valid_count);
+
         OPAL_Receiver_Start_Sniffing(&hrx); // Return to sniffing mode
     }
 
@@ -208,10 +239,11 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
-  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USART2|RCC_PERIPHCLK_ADC12
-                              |RCC_PERIPHCLK_TIM2;
+  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USART2|RCC_PERIPHCLK_I2C1
+                              |RCC_PERIPHCLK_ADC12|RCC_PERIPHCLK_TIM2;
   PeriphClkInit.Usart2ClockSelection = RCC_USART2CLKSOURCE_PCLK1;
   PeriphClkInit.Adc12ClockSelection = RCC_ADC12PLLCLK_DIV1;
+  PeriphClkInit.I2c1ClockSelection = RCC_I2C1CLKSOURCE_HSI;
   PeriphClkInit.Tim2ClockSelection = RCC_TIM2CLK_HCLK;
   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
   {

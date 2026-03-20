@@ -54,6 +54,9 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
 
     # STM32 UART Driver sources
     Drivers/STM32_UART_Driver/Src/stm32_uart_rx.c
+
+    # STM32 I2C Lib sources
+    Drivers/SSD1306_I2C_LIB/src/ssd1306_oled.c
 )
 
 # Add include paths
@@ -65,6 +68,10 @@ target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
 
     # STM32 UART Driver includes
     Drivers/STM32_UART_Driver/Inc
+
+    # STM32 I2C Lib includes
+    Drivers/SSD1306_I2C_LIB/inc
+    Drivers/SSD1306_I2C_LIB/fonts
 )
 
 # Add project symbols (macros)
