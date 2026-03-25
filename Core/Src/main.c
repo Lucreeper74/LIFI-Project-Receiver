@@ -32,6 +32,7 @@
 #include "stm32_opal_receiver.h"
 #include "stm32_opal_uart_rx_cmd.h"
 #include "ssd1306_oled.h"
+#include <stdint.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -53,6 +54,7 @@
 
 /* USER CODE BEGIN PV */
 const char* display_TAG = "OPAL RX Unit";
+bool TIM3_ITR_FLAG = false;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -134,6 +136,8 @@ int main(void)
 
   OPAL_Receiver_Start_Sniffing(&hrx);
 
+  uint16_t pwr_indicator = 0;
+
   char* RX_data_str_fields[] = {
       "STATUS=",
       "BIN_ERRORS=",
@@ -153,6 +157,11 @@ int main(void)
         UART_Command cmd = UART_RX_ParseCmd(&huart_rx);
         printf(cmd.has_param ? "Received Command: %s, with param: %s\r\n" : "Received Command: %s\r\n", cmd.command, cmd.param);
         OPAL_RX_UART_processCommand(&cmd, &hrx);
+    }
+
+    if (TIM3_ITR_FLAG) {
+      // Compute the y(n) after filtering
+      pwr_indicator = compute_filter(void);
     }
 
     // OPAL Receiver Processing
